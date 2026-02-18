@@ -141,20 +141,23 @@ def nullHeuristic(state, problem=None) -> float:
 def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic) -> List[Directions]:
     """Search the node that has the lowest combined cost and heuristic first."""
     start = problem.getStartState()
-    f_cost = util.PriorityQueue()
-    f_cost.push((start, [], 0), heuristic(start, problem))
+    node_list = util.PriorityQueue()
+    node_list.push((start, []), heuristic(start, problem))
     #keep a list of visted nodes to avoid cycles
-    visited = []
-    while not f_cost.isEmpty():
-        node, path, g_cost = f_cost.pop() # Pop the next node from the priority queue
-        if problem.isGoalState(node): # Check if goal state is reached
-            return path
-        if node not in visited: # If the node has not been visited, add it to the visited list
-            visited.append(node)
-            for successor, path, step_cost in problem.getSuccessors(node): # Iterate through the successors of the current node
-                new_g_cost = g_cost + step_cost
-                new_f_cost = new_g_cost + heuristic(successor, problem)
-                f_cost.push((successor, path + [path], new_g_cost), new_f_cost)
+    visited = {}
+    while not node_list.isEmpty():
+        node, path = node_list.pop() # Pop the next node from the priority queue
+        g = problem.getCostOfActions(path) # Get the cost of the path to the current node
+        if node in visited and visited[node] <= g:
+            continue
+        visited[node] = g # Mark the current node as visited with its cost
+        if problem.isGoalState(node):
+            return path # Return the path to the goal if found
+        for successor, action, stepCost in problem.getSuccessors(node):
+            new_path = path + [action] # Create a new path by adding the action to the current path
+            new_g = g + stepCost # Calculate the new cost to reach the successor
+            new_f = new_g + heuristic(successor, problem) # Calculate the f(n) value for the successor
+            node_list.push((successor, new_path), new_f) # Push the successor onto the priority queue with its f(n) value
     return []
 
 # Abbreviations
