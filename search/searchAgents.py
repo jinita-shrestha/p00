@@ -295,15 +295,17 @@ class CornersProblem(search.SearchProblem):
         Returns the start state (in your state space, not the full Pacman state
         space)
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        startPos = self.startingPosition
+        visitedCorners = tuple(startPos == corner for corner in self.corners)
+        return (startPos, visitedCorners)   
 
     def isGoalState(self, state: Any):
         """
         Returns whether this search state is a goal state of the problem.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # goal is when all corners have been visited
+        x, visitedCorners = state
+        return all(visitedCorners)
 
     def getSuccessors(self, state: Any):
         """
@@ -325,7 +327,14 @@ class CornersProblem(search.SearchProblem):
             #   nextx, nexty = int(x + dx), int(y + dy)
             #   hitsWall = self.walls[nextx][nexty]
 
-            "*** YOUR CODE HERE ***"
+           x, y = state[0]
+           visitedCorners = state[1]
+           dx, dy = Actions.directionToVector(action)
+           nextx, nexty = int(x + dx), int(y + dy)
+           if not self.walls[nextx][nexty]:
+                nextPos = (nextx, nexty)
+                nextVisitedCorners = tuple(v or (nextPos == corner) for v, corner in zip(visitedCorners, self.corners))
+                successors.append(((nextPos, nextVisitedCorners), action, 1))
 
         self._expanded += 1 # DO NOT CHANGE
         return successors
