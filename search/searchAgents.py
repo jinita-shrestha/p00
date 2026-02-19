@@ -476,9 +476,44 @@ def foodHeuristic(state: Tuple[Tuple, List[List]], problem: FoodSearchProblem):
     problem.heuristicInfo['wallCount']
     """
     position, foodGrid = state
-    "*** YOUR CODE HERE ***"
-    return 0
+    foodList = foodGrid.asList()
 
+    # check for empty list, if no food then we are at goal
+    if not foodList:
+        return 0
+    
+    # create cache for maze distances 
+    if 'distance' not in problem.heuristicInfo:
+        problem.heuristicInfo['distance'] = {}
+    
+    # helper function to calculate maze distance with caching
+    def distcalc(a, b):
+        key = (a, b) if a <= b else (b, a)
+        if key not in problem.heuristicInfo['distance']:
+            problem.heuristicInfo['distance'][key] = mazeDistance(a, b, problem.startingGameState)
+        return problem.heuristicInfo['distance'][key] 
+    
+    node = [position] + foodList
+    inMST = {node[0]}  # start with current position in MST
+    edgeCosts = {n: float('inf') for n in node} 
+
+    for n in node[1:]:
+        edgeCosts[n] = distcalc(node[0], n)
+
+    # use Prim's algorithm to find cost of MST connecting current position and all food dots
+    mstCost = 0 
+    while len(inMST) < len(node):
+        nextNode = min((n for n in node if n not in inMST), key=lambda n: edgeCosts[n])
+        mstCost += edgeCosts[nextNode]
+        inMST.add(nextNode)
+
+        #update edge costs
+        for n in node:
+            if n not in inMST:
+                d = distcalc(nextNode, n)
+                if d < edgeCosts[n]:
+                    edgeCosts[n] = d
+    return mstCost
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
